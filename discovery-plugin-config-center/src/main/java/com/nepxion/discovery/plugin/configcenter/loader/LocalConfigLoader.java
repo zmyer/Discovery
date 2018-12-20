@@ -13,12 +13,16 @@ import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
-import com.nepxion.discovery.plugin.framework.constant.PluginConstant;
+import com.nepxion.discovery.common.constant.DiscoveryConstant;
 
 public abstract class LocalConfigLoader implements ConfigLoader {
+    private static final Logger LOG = LoggerFactory.getLogger(LocalConfigLoader.class);
+
     @Autowired
     private ApplicationContext applicationContext;
 
@@ -26,17 +30,21 @@ public abstract class LocalConfigLoader implements ConfigLoader {
     public String getConfig() throws Exception {
         String path = getPath();
         if (StringUtils.isEmpty(path)) {
-            throw new IllegalArgumentException("Local path isn't set");
+            throw new IllegalArgumentException("Config local path isn't set");
         }
+
+        LOG.info("Config local path is {}", path);
 
         InputStream inputStream = null;
         try {
             String filePath = applicationContext.getEnvironment().resolvePlaceholders(path);
             inputStream = applicationContext.getResource(filePath).getInputStream();
 
-            return IOUtils.toString(inputStream, PluginConstant.ENCODING_UTF_8);
+            return IOUtils.toString(inputStream, DiscoveryConstant.ENCODING_UTF_8);
         } catch (Exception e) {
-            throw e;
+            LOG.warn(e.getMessage() + ", ignore to load...");
+
+            return null;
         } finally {
             if (inputStream != null) {
                 IOUtils.closeQuietly(inputStream);

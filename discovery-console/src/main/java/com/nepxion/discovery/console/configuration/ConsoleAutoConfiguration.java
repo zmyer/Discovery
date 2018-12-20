@@ -9,13 +9,19 @@ package com.nepxion.discovery.console.configuration;
  * @version 1.0
  */
 
+import org.springframework.boot.actuate.endpoint.web.annotation.RestControllerEndpoint;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.client.RestTemplate;
 
+import com.nepxion.discovery.common.constant.DiscoveryConstant;
+import com.nepxion.discovery.common.handler.RestErrorHandler;
+import com.nepxion.discovery.console.authentication.AuthenticationResource;
+import com.nepxion.discovery.console.authentication.AuthenticationResourceImpl;
 import com.nepxion.discovery.console.endpoint.ConsoleEndpoint;
-import com.nepxion.discovery.console.handler.ConsoleErrorHandler;
 
 @Configuration
 @Import(SwaggerConfiguration.class)
@@ -30,10 +36,11 @@ public class ConsoleAutoConfiguration {
         System.out.println("╚═══╩╩══╩══╩══╝╚╝╚══╩╝╚═╗╔╝");
         System.out.println("                      ╔═╝║");
         System.out.println("                      ╚══╝");
-        System.out.println("Nepxion Discovery - Console  v4.1.2");
+        System.out.println("Nepxion Discovery - Console  v" + DiscoveryConstant.DISCOVERY_VERSION);
         System.out.println("");
     }
 
+    @ConditionalOnClass(RestControllerEndpoint.class)
     protected static class ConsoleEndpointConfiguration {
         @Bean
         public ConsoleEndpoint consoleEndpoint() {
@@ -43,9 +50,15 @@ public class ConsoleAutoConfiguration {
         @Bean
         public RestTemplate consoleRestTemplate() {
             RestTemplate restTemplate = new RestTemplate();
-            restTemplate.setErrorHandler(new ConsoleErrorHandler());
+            restTemplate.setErrorHandler(new RestErrorHandler());
 
             return restTemplate;
+        }
+
+        @Bean
+        @ConditionalOnMissingBean
+        public AuthenticationResource authenticationResource() {
+            return new AuthenticationResourceImpl();
         }
     }
 }
